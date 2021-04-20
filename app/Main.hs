@@ -1,9 +1,5 @@
 module Main where
 
-import Brick
+import Shellter
 
-ui :: Widget ()
-ui = str "Hello, world!"
-
-main :: IO ()
-main = simpleMain ui
+main = app
