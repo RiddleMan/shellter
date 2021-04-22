@@ -35,6 +35,7 @@ library
     , brick >=0.58.1 && <1.0
     , containers >=0.6.2.1 && <0.7.0.0
     , mtl >=2.2.2 && <2.3.0
+    , optparse-applicative >=0.15.1.0 && <0.16.0.0
   default-language: Haskell2010
 
 executable shellter-exe
@@ -49,6 +50,7 @@ executable shellter-exe
     , brick >=0.58.1 && <1.0
     , containers >=0.6.2.1 && <0.7.0.0
     , mtl >=2.2.2 && <2.3.0
+    , optparse-applicative >=0.15.1.0 && <0.16.0.0
     , shellter
   default-language: Haskell2010
 
@@ -65,5 +67,6 @@ test-suite shellter-test
     , brick >=0.58.1 && <1.0
     , containers >=0.6.2.1 && <0.7.0.0
     , mtl >=2.2.2 && <2.3.0
+    , optparse-applicative >=0.15.1.0 && <0.16.0.0
     , shellter
   default-language: Haskell2010
