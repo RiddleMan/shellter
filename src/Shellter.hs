@@ -5,10 +5,13 @@ module Shellter
   ) where
 
 import Brick
+import qualified Shellter.Commands.Add as CmdAdd
 import Shellter.Types
 
 ui :: Widget ()
 ui = str "Hello, world!"
 
 run :: Options -> IO ()
-run = print
+run opt =
+  case subCmd opt of
+    Add path cmd -> CmdAdd.run path cmd
