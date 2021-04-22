@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Shellter
+      Shellter.Types
   other-modules:
       Paths_shellter
   hs-source-dirs:
