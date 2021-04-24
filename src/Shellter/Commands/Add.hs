@@ -17,10 +17,9 @@ findProjectRoot' currPath =
   hasGitFolder currPath >>=
   (\case
      True -> return (Just currPath)
-     False -> makeAbsolute (currPath ++ "/../") >>= findProjectRoot')
+     False -> canonicalizePath (currPath ++ "/../") >>= findProjectRoot')
 
 run :: String -> String -> IO ()
 run path cmd =
   print ("path: " ++ path) >> print ("cmd: " ++ cmd) >>
-  (makeAbsolute (path ++ "/../") >>= print) >>
   (findProjectRoot' path >>= print)
