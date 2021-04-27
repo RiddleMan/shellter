@@ -24,13 +24,7 @@ data HistoryEntry = HistoryEntry
 
 instance Show HistoryEntry where
   show entry =
-    projectPath entry
-      ++ ":"
-      ++ cmd entry
-      ++ ":"
-      ++ show (hits entry)
-      ++ ":"
-      ++ lastUsed entry
+    intercalate ";" [projectPath entry, cmd entry, show (hits entry), lastUsed entry]
 
 getConfigFilePath :: IO FilePath
 getConfigFilePath = (++ "/.shellter_history") <$> getHomeDirectory
@@ -63,7 +57,7 @@ parseHistoryLine =
         (Prelude.read hits :: Int)
         lastUsed
   )
-    . splitOn ":"
+    . splitOn ";"
 
 parseHistoryEntries :: [String] -> [HistoryEntry]
 parseHistoryEntries =

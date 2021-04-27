@@ -6,6 +6,7 @@ module Shellter.Commands.Add
   )
 where
 
+import Control.Applicative
 import Data.List
 import Data.Maybe
 import Data.Time
@@ -31,23 +32,34 @@ addEntryIfDoesNotExist :: HistoryEntry -> [HistoryEntry] -> [HistoryEntry]
 addEntryIfDoesNotExist toAdd entries =
   (++) entries
     . ( \case
-          Just a -> [a]
-          Nothing -> []
+          Just a -> []
+          Nothing -> [toAdd]
       )
-    . find (\t -> projectPath toAdd == projectPath t)
+    . find (\t -> projectPath toAdd == projectPath t && cmd toAdd == cmd t)
     $ entries
 
 saveEntry :: String -> String -> IO ()
-saveEntry cmd path =
-  readHistoryFile
+saveEntry cmd' path =
+  liftA2
+    ( \currentTime ->
+        addEntryIfDoesNotExist
+          HistoryEntry
+            { projectPath = path,
+              lastUsed = formatDate currentTime,
+              hits = 0,
+              cmd = cmd'
+            }
+          . map
+            ( \t ->
+                -- TODO: add Eq instance to HistoryEntry
+                if projectPath t == path && cmd t == cmd'
+                  then t {hits = hits t + 1, lastUsed = formatDate currentTime}
+                  else t
+            )
+    )
+    getCurrentTime
+    readHistoryFile
     >>= writeHistoryFile
-      -- . addEntryIfDoesNotExist (HistoryEntry { projectPath = path, cmd = cmd, hits = 0, lastUsed =
-      . map
-        ( \t ->
-            if projectPath t == path
-              then t
-              else t {hits = hits t + 1}
-        )
 
 run :: String -> String -> IO ()
 run path cmd = findProjectRoot path >>= saveEntry cmd . fromMaybe ""
