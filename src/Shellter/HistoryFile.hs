@@ -1,15 +1,23 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Shellter.HistoryFile (saveEntry) where
+module Shellter.HistoryFile
+  ( readHistoryFile,
+    writeHistoryFile,
+    HistoryEntry (..),
+  )
+where
 
+import Control.Exception
+import qualified Data.Either as DE
+import Data.List
 import Data.List.Split
 import Data.Time
 import System.Directory
+import qualified System.IO.Strict as SIO
 import System.Posix.Files
 
 data HistoryEntry = HistoryEntry
-  { path :: FilePath,
-    projectPath :: String,
+  { projectPath :: String,
     cmd :: String,
     hits :: Int,
     lastUsed :: String
@@ -17,9 +25,7 @@ data HistoryEntry = HistoryEntry
 
 instance Show HistoryEntry where
   show entry =
-    path entry
-      ++ ":"
-      ++ projectPath entry
+    projectPath entry
       ++ ":"
       ++ cmd entry
       ++ ":"
@@ -42,44 +48,38 @@ createIfDoesNotExist =
             False -> getConfigFilePath >>= (`writeFile` "")
         )
 
-readHistoryFile :: IO [String]
-readHistoryFile =
+readHistoryFile' :: IO [String]
+readHistoryFile' =
   lines
     <$> ( getConfigFilePath
-            >>= readFile
+            >>= (try . SIO.readFile :: String -> IO (Either IOException String))
+            >>= pure . DE.fromRight ""
         )
 
 -- TODO: Rewrite to the instance of the Read typeclass
+-- TODO: Check whether we can parse hits or any entries in the file
 parseHistoryLine :: String -> HistoryEntry
 parseHistoryLine =
-  ( \[path, projectPath, cmd, hits, lastUsed] ->
+  ( \[path, cmd, hits, lastUsed] ->
       HistoryEntry
         path
-        projectPath
         cmd
-        (read hits :: Int)
+        (Prelude.read hits :: Int)
         lastUsed
   )
     . splitOn ":"
 
 parseHistoryEntries :: [String] -> [HistoryEntry]
-parseHistoryEntries = map parseHistoryLine
+parseHistoryEntries =
+  map parseHistoryLine
+    . filter
+      ( \case
+          "\n" -> False
+          _ -> True
+      )
 
-saveEntry :: String -> String -> String -> IO ()
-saveEntry path projectPath cmd =
-  createIfDoesNotExist
-    >> getCurrentTime
-    >>= ( \time ->
-            getConfigFilePath
-              >>= ( `appendFile`
-                      show
-                        ( HistoryEntry
-                            { path = path,
-                              projectPath = projectPath,
-                              cmd = cmd,
-                              hits = 0,
-                              lastUsed = formatDate time
-                            }
-                        )
-                  )
-        )
+readHistoryFile :: IO [HistoryEntry]
+readHistoryFile = parseHistoryEntries <$> readHistoryFile'
+
+writeHistoryFile :: [HistoryEntry] -> IO ()
+writeHistoryFile x = getConfigFilePath >>= (`writeFile` (intercalate "\n" . map show) x)
