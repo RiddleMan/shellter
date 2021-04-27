@@ -40,25 +40,24 @@ addEntryIfDoesNotExist toAdd entries =
 
 saveEntry :: String -> String -> IO ()
 saveEntry cmd' path =
-  liftA2
-    ( \currentTime ->
-        addEntryIfDoesNotExist
-          HistoryEntry
-            { projectPath = path,
-              lastUsed = formatDate currentTime,
-              hits = 0,
-              cmd = cmd'
-            }
-          . map
-            ( \t ->
-                -- TODO: add Eq instance to HistoryEntry
-                if projectPath t == path && cmd t == cmd'
-                  then t {hits = hits t + 1, lastUsed = formatDate currentTime}
-                  else t
-            )
-    )
-    getCurrentTime
-    readHistoryFile
+  ( \currentTime ->
+      addEntryIfDoesNotExist
+        HistoryEntry
+          { projectPath = path,
+            lastUsed = formatDate currentTime,
+            hits = 0,
+            cmd = cmd'
+          }
+        . map
+          ( \t ->
+              -- TODO: add Eq instance to HistoryEntry
+              if projectPath t == path && cmd t == cmd'
+                then t {hits = hits t + 1, lastUsed = formatDate currentTime}
+                else t
+          )
+  )
+    <$> getCurrentTime
+    <*> readHistoryFile
     >>= writeHistoryFile
 
 run :: String -> String -> IO ()
