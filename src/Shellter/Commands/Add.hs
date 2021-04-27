@@ -1,9 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module Shellter.Commands.Add where
+module Shellter.Commands.Add
+  ( run,
+  )
+where
 
+import Data.List
 import Data.Maybe
+import Data.Time
 import Shellter.HistoryFile
 import System.Directory
 
@@ -19,10 +24,24 @@ findProjectRoot currPath =
             False -> canonicalizePath (currPath ++ "/../") >>= findProjectRoot
         )
 
+formatDate :: UTCTime -> String
+formatDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+addEntryIfDoesNotExist :: HistoryEntry -> [HistoryEntry] -> [HistoryEntry]
+addEntryIfDoesNotExist toAdd entries =
+  (++) entries
+    . ( \case
+          Just a -> [a]
+          Nothing -> []
+      )
+    . find (\t -> projectPath toAdd == projectPath t)
+    $ entries
+
 saveEntry :: String -> String -> IO ()
 saveEntry cmd path =
   readHistoryFile
     >>= writeHistoryFile
+      -- . addEntryIfDoesNotExist (HistoryEntry { projectPath = path, cmd = cmd, hits = 0, lastUsed =
       . map
         ( \t ->
             if projectPath t == path
@@ -31,4 +50,4 @@ saveEntry cmd path =
         )
 
 run :: String -> String -> IO ()
-run path cmd = findProjectRoot path >>= saveEntry cmd . fromMaybe "" --saveEntry cmd . fromMaybe "" <$> findProjectRoot path
+run path cmd = findProjectRoot path >>= saveEntry cmd . fromMaybe ""

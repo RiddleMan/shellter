@@ -11,7 +11,6 @@ import Control.Exception
 import qualified Data.Either as DE
 import Data.List
 import Data.List.Split
-import Data.Time
 import System.Directory
 import qualified System.IO.Strict as SIO
 import System.Posix.Files
@@ -35,9 +34,6 @@ instance Show HistoryEntry where
 
 getConfigFilePath :: IO FilePath
 getConfigFilePath = (++ "/.shellter_history") <$> getHomeDirectory
-
-formatDate :: UTCTime -> String
-formatDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
 
 createIfDoesNotExist :: IO ()
 createIfDoesNotExist =
