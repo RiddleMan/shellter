@@ -38,22 +38,17 @@ addEntryIfDoesNotExist toAdd entries =
     . find (\t -> projectPath toAdd == projectPath t && cmd toAdd == cmd t)
     $ entries
 
-saveEntry :: String -> String -> IO ()
-saveEntry cmd' path =
-  ( \currentTime ->
-      addEntryIfDoesNotExist (getEntryToAdd currentTime path cmd')
-        . map
-          ( \t ->
-              if getEntryToAdd currentTime path cmd' == t
-                then t {hits = hits t + 1, lastUsed = formatDate currentTime}
-                else t
-          )
-  )
-    <$> getCurrentTime
-    <*> readHistoryFile
-    >>= writeHistoryFile
+processList :: String -> String -> UTCTime -> [HistoryEntry] -> [HistoryEntry]
+processList path cmd currentTime =
+  addEntryIfDoesNotExist entryToAdd
+    . map
+      ( \entry ->
+          if entryToAdd == entry
+            then entry {hits = hits entry + 1, lastUsed = formatDate currentTime}
+            else entry
+      )
   where
-    getEntryToAdd currentTime path cmd =
+    entryToAdd =
       HistoryEntry
         { projectPath = path,
           lastUsed = formatDate currentTime,
@@ -61,5 +56,12 @@ saveEntry cmd' path =
           cmd = cmd
         }
 
+saveEntry :: String -> String -> IO ()
+saveEntry path cmd =
+  processList path cmd
+    <$> getCurrentTime
+    <*> readHistoryFile
+    >>= writeHistoryFile
+
 run :: String -> String -> IO ()
-run path cmd = findProjectRoot path >>= saveEntry cmd . fromMaybe ""
+run path cmd = findProjectRoot path >>= (`saveEntry` cmd) . fromMaybe ""
