@@ -22,6 +22,9 @@ data HistoryEntry = HistoryEntry
     lastUsed :: String
   }
 
+instance Eq HistoryEntry where
+  (==) a b = projectPath a == projectPath b && cmd a == cmd b
+
 instance Show HistoryEntry where
   show entry =
     intercalate ";" [projectPath entry, cmd entry, show (hits entry), lastUsed entry]

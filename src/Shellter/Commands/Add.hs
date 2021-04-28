@@ -41,17 +41,10 @@ addEntryIfDoesNotExist toAdd entries =
 saveEntry :: String -> String -> IO ()
 saveEntry cmd' path =
   ( \currentTime ->
-      addEntryIfDoesNotExist
-        HistoryEntry
-          { projectPath = path,
-            lastUsed = formatDate currentTime,
-            hits = 0,
-            cmd = cmd'
-          }
+      addEntryIfDoesNotExist (getEntryToAdd currentTime path cmd')
         . map
           ( \t ->
-              -- TODO: add Eq instance to HistoryEntry
-              if projectPath t == path && cmd t == cmd'
+              if getEntryToAdd currentTime path cmd' == t
                 then t {hits = hits t + 1, lastUsed = formatDate currentTime}
                 else t
           )
@@ -59,6 +52,14 @@ saveEntry cmd' path =
     <$> getCurrentTime
     <*> readHistoryFile
     >>= writeHistoryFile
+  where
+    getEntryToAdd currentTime path cmd =
+      HistoryEntry
+        { projectPath = path,
+          lastUsed = formatDate currentTime,
+          hits = 1,
+          cmd = cmd
+        }
 
 run :: String -> String -> IO ()
 run path cmd = findProjectRoot path >>= saveEntry cmd . fromMaybe ""
