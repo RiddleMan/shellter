@@ -15,11 +15,11 @@ subCommandParser =
 
 commandParser :: Parser Options
 commandParser =
-  Options <$> subCommandParser <*>
-  strOption
-    (long "test" <> metavar "TARGET" <> help "Test asdf" <> value "asdf") <*>
-  strOption
-    (long "test2" <> metavar "TARGET" <> help "Test 2 asdf" <> value "asdf2")
+  Options <$> subCommandParser
+    <*> strOption
+      (long "test" <> metavar "TARGET" <> help "Test asdf" <> value "asdf")
+    <*> strOption
+      (long "test2" <> metavar "TARGET" <> help "Test 2 asdf" <> value "asdf2")
 
 main :: IO ()
 main = execParser opt >>= run
@@ -27,5 +27,7 @@ main = execParser opt >>= run
     opt =
       info
         (commandParser <**> helper)
-        (fullDesc <>
-         progDesc "Example for multiple subcommands" <> header "myProgram")
+        ( fullDesc
+            <> progDesc "Example for multiple subcommands"
+            <> header "myProgram"
+        )
