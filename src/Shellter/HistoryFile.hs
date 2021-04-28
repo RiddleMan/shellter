@@ -25,6 +25,7 @@ data HistoryEntry = HistoryEntry
 instance Eq HistoryEntry where
   (==) a b = projectPath a == projectPath b && cmd a == cmd b
 
+-- TODO: escape/use different format to allow typing in ; in the command line
 instance Show HistoryEntry where
   show entry =
     intercalate ";" [projectPath entry, cmd entry, show (hits entry), lastUsed entry]

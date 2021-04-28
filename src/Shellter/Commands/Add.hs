@@ -9,6 +9,7 @@ where
 import Control.Applicative
 import Data.List
 import Data.Maybe
+import Data.String.Utils
 import Data.Time
 import Shellter.HistoryFile
 import System.Directory
@@ -56,12 +57,21 @@ processList path cmd currentTime =
           cmd = cmd
         }
 
+validate :: String -> Bool
+validate "" = False
+validate _ = True
+
 saveEntry :: String -> String -> IO ()
 saveEntry path cmd =
-  processList path cmd
-    <$> getCurrentTime
-    <*> readHistoryFile
-    >>= writeHistoryFile
+  if validate cmd
+    then
+      processList path processedCmd
+        <$> getCurrentTime
+        <*> readHistoryFile
+        >>= writeHistoryFile
+    else pure ()
+  where
+    processedCmd = strip cmd
 
 run :: String -> String -> IO ()
 run path cmd = findProjectRoot path >>= (`saveEntry` cmd) . fromMaybe ""

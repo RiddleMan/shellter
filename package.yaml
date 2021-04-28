@@ -30,6 +30,7 @@ dependencies:
 - unix >= 2.7.2.2 && < 2.8.0.0
 - split >= 0.2.3.4 && < 0.2.4.0
 - strict >= 0.4.0.1 && < 0.4.1.0
+- MissingH >= 1.4.3.0 && < 1.5.0.0
 
 library:
   source-dirs: src
