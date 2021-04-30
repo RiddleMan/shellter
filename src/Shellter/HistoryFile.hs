@@ -26,10 +26,15 @@ data HistoryEntry = HistoryEntry
 instance Eq HistoryEntry where
   (==) a b = projectPath a == projectPath b && cmd a == cmd b
 
+escape :: String -> String
+escape (';' : xs) = ";;" ++ escape xs
+escape (x : xs) = x : escape xs
+escape [] = []
+
 -- TODO: escape/use different format to allow typing in ; in the command line
 instance Show HistoryEntry where
   show entry =
-    intercalate ";" [projectPath entry, cmd entry, show (hits entry), lastUsed entry]
+    intercalate ";" [escape $ projectPath entry, escape $ cmd entry, show (hits entry), lastUsed entry]
 
 getConfigFilePath :: IO FilePath
 getConfigFilePath = (++ "/.shellter_history") <$> getHomeDirectory
