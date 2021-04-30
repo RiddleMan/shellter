@@ -52,27 +52,29 @@ readHistoryFile' =
             <&> DE.fromRight ""
         )
 
+parseParts :: [String] -> HistoryEntry
+parseParts [path, cmd, hits, lastUsed] =
+  HistoryEntry
+    path
+    cmd
+    (Prelude.read hits :: Int)
+    lastUsed
+
 -- TODO: Rewrite to the instance of the Read typeclass
--- TODO: Check whether we can parse hits or any entries in the file
-parseHistoryLine :: String -> HistoryEntry
+parseHistoryLine :: String -> [HistoryEntry]
 parseHistoryLine =
-  ( \[path, cmd, hits, lastUsed] ->
-      HistoryEntry
-        path
-        cmd
-        (Prelude.read hits :: Int)
-        lastUsed
-  )
+  (\parts -> ([parseParts parts | length parts == 4]))
     . splitOn ";"
 
 parseHistoryEntries :: [String] -> [HistoryEntry]
-parseHistoryEntries =
-  map parseHistoryLine
-    . filter
-      ( \case
-          "\n" -> False
-          _ -> True
-      )
+parseHistoryEntries arr =
+  filter
+    ( \case
+        "\n" -> False
+        _ -> True
+    )
+    arr
+    >>= parseHistoryLine
 
 readHistoryFile :: IO [HistoryEntry]
 readHistoryFile = parseHistoryEntries <$> readHistoryFile'
