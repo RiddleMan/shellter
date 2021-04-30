@@ -9,6 +9,7 @@ where
 
 import Control.Exception
 import qualified Data.Either as DE
+import Data.Functor
 import Data.List
 import Data.List.Split
 import System.Directory
@@ -45,9 +46,10 @@ createIfDoesNotExist =
 readHistoryFile' :: IO [String]
 readHistoryFile' =
   lines
-    <$> ( getConfigFilePath
-            >>= (try . SIO.readFile :: String -> IO (Either IOException String))
-            >>= pure . DE.fromRight ""
+    <$> ( ( getConfigFilePath
+              >>= (try . SIO.readFile :: String -> IO (Either IOException String))
+          )
+            <&> DE.fromRight ""
         )
 
 -- TODO: Rewrite to the instance of the Read typeclass
