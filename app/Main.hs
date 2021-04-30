@@ -6,7 +6,9 @@ import Shellter
 
 addParser :: Parser Command
 addParser =
-  Add <$> argument str (metavar "PATH") <*> argument str (metavar "COMMAND")
+  Add <$> argument str (metavar "PATH")
+    <*> argument str (metavar "COMMAND")
+    <*> argument auto (metavar "ERROR_CODE")
 
 subCommandParser :: Parser Command
 subCommandParser =

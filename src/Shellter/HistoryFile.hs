@@ -23,7 +23,8 @@ data HistoryEntry = HistoryEntry
   { projectPath :: String,
     cmd :: String,
     hits :: Int,
-    lastUsed :: String
+    lastUsed :: String,
+    lastErrorCode :: Int
   }
 
 instance Eq HistoryEntry where
@@ -49,12 +50,13 @@ readHistoryFile' =
     <&> DE.fromRight ""
 
 parseParts :: [String] -> HistoryEntry
-parseParts [path, cmd, hits, lastUsed] =
+parseParts [path, cmd, hits, lastUsed, lastErrorCode] =
   HistoryEntry
     path
     cmd
     (Prelude.read hits :: Int)
     lastUsed
+    (Prelude.read lastErrorCode :: Int)
 
 parseHistoryEntries :: [[String]] -> [HistoryEntry]
 parseHistoryEntries = map parseParts
@@ -65,7 +67,16 @@ readHistoryFile :: IO [HistoryEntry]
 readHistoryFile = parseHistoryEntries . DE.fromRight [] . PS.parse csvFile "" <$> readHistoryFile'
 
 processToSave :: [HistoryEntry] -> [[String]]
-processToSave = map (\entry -> [projectPath entry, cmd entry, show $ hits entry, lastUsed entry])
+processToSave =
+  map
+    ( \entry ->
+        [ projectPath entry,
+          cmd entry,
+          show $ hits entry,
+          lastUsed entry,
+          show $ lastErrorCode entry
+        ]
+    )
 
 genOutputCsv :: [HistoryEntry] -> String
 genOutputCsv = genCsvFile . processToSave
