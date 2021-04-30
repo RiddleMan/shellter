@@ -8,13 +8,16 @@ module Shellter.HistoryFile
 where
 
 import Control.Exception
+import Data.CSV
 import qualified Data.Either as DE
 import Data.Functor
 import Data.List
 import Data.List.Split
+import Data.List.Utils
 import System.Directory
 import qualified System.IO.Strict as SIO
 import System.Posix.Files
+import qualified Text.ParserCombinators.Parsec as PS
 
 data HistoryEntry = HistoryEntry
   { projectPath :: String,
@@ -25,16 +28,6 @@ data HistoryEntry = HistoryEntry
 
 instance Eq HistoryEntry where
   (==) a b = projectPath a == projectPath b && cmd a == cmd b
-
-escape :: String -> String
-escape (';' : xs) = ";;" ++ escape xs
-escape (x : xs) = x : escape xs
-escape [] = []
-
--- TODO: escape/use different format to allow typing in ; in the command line
-instance Show HistoryEntry where
-  show entry =
-    intercalate ";" [escape $ projectPath entry, escape $ cmd entry, show (hits entry), lastUsed entry]
 
 getConfigFilePath :: IO FilePath
 getConfigFilePath = (++ "/.shellter_history") <$> getHomeDirectory
@@ -48,14 +41,12 @@ createIfDoesNotExist =
             False -> getConfigFilePath >>= (`writeFile` "")
         )
 
-readHistoryFile' :: IO [String]
+readHistoryFile' :: IO String
 readHistoryFile' =
-  lines
-    <$> ( ( getConfigFilePath
-              >>= (try . SIO.readFile :: String -> IO (Either IOException String))
-          )
-            <&> DE.fromRight ""
-        )
+  ( getConfigFilePath
+      >>= (try . SIO.readFile :: String -> IO (Either IOException String))
+  )
+    <&> DE.fromRight ""
 
 parseParts :: [String] -> HistoryEntry
 parseParts [path, cmd, hits, lastUsed] =
@@ -65,24 +56,17 @@ parseParts [path, cmd, hits, lastUsed] =
     (Prelude.read hits :: Int)
     lastUsed
 
--- TODO: Rewrite to the instance of the Read typeclass
-parseHistoryLine :: String -> [HistoryEntry]
-parseHistoryLine =
-  (\parts -> ([parseParts parts | length parts == 4]))
-    . splitOn ";"
-
-parseHistoryEntries :: [String] -> [HistoryEntry]
-parseHistoryEntries arr =
-  filter
-    ( \case
-        "\n" -> False
-        _ -> True
-    )
-    arr
-    >>= parseHistoryLine
+parseHistoryEntries :: [[String]] -> [HistoryEntry]
+parseHistoryEntries = map parseParts
 
 readHistoryFile :: IO [HistoryEntry]
-readHistoryFile = parseHistoryEntries <$> readHistoryFile'
+readHistoryFile = parseHistoryEntries . DE.fromRight [] . PS.parse csvFile "" <$> readHistoryFile'
+
+processToSave :: [HistoryEntry] -> [[String]]
+processToSave = map (\entry -> [projectPath entry, cmd entry, show $ hits entry, lastUsed entry])
+
+genOutputCsv :: [HistoryEntry] -> String
+genOutputCsv = genCsvFile . processToSave
 
 writeHistoryFile :: [HistoryEntry] -> IO ()
-writeHistoryFile x = getConfigFilePath >>= (`writeFile` (intercalate "\n" . map show) x)
+writeHistoryFile x = getConfigFilePath >>= (`writeFile` genOutputCsv x)
