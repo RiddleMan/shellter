@@ -59,7 +59,7 @@ parseParts [path, cmd, hits, lastUsed] =
 parseHistoryEntries :: [[String]] -> [HistoryEntry]
 parseHistoryEntries = map parseParts
 
--- In fact IO (Either ParseError [HistoryEntry]) should be returned,
+-- TODO: In fact IO (Either ParseError [HistoryEntry]) should be returned,
 -- because it clears out if something isn't right in the format
 readHistoryFile :: IO [HistoryEntry]
 readHistoryFile = parseHistoryEntries . DE.fromRight [] . PS.parse csvFile "" <$> readHistoryFile'
