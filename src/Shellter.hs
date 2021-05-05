@@ -1,8 +1,9 @@
 module Shellter
-  ( run
-  , Options(..)
-  , Command(..)
-  ) where
+  ( run,
+    Options (..),
+    Command (..),
+  )
+where
 
 import Brick
 import qualified Shellter.Commands.Add as CmdAdd
@@ -14,4 +15,4 @@ ui = str "Hello, world!"
 run :: Options -> IO ()
 run opt =
   case subCmd opt of
-    Add path cmd -> CmdAdd.run path cmd
+    Add path cmd errorCode -> CmdAdd.run path cmd errorCode
